@@ -26,33 +26,89 @@ router.post('/register',async (req,res)=>{
     }).catch(e=>{
         console.log('user count error',e)
     });
-    var ans = pad.substring(0, pad.length - count.length) + count
+    var userNo = pad.substring(0, pad.length - count.length) + count
     console.log('count data ',count)
-    let userData={
-        user_id: 'bingo_000'+ans,
-        name: req.body.name,
-        email: req.body.email,
-        description: req.body.description,
-        profile_url: req.body.profile_url,
-        access_token: await functions.generate_token(16),
-        fcm_token: req.body.fcm_token,
-    }
+    
 
     //check email id already exist
 
-    userSchema.find({email:req.body.email}).then(result=>{
+    userSchema.find({email:req.body.email}).then(async result=>{
         if(result.length>0){
             //update data
             console.log('update user data')
+            let userUpdateData={
+                name: req.body.name,
+                email: req.body.email,
+                description: req.body.description,
+                profile_url: req.body.profile_url,
+                access_token: await functions.generate_token(16),
+                fcm_token: req.body.fcm_token
+            }
+             userSchema.findOneAndUpdate({email: req.body.email},userUpdateData,{new: true}).then((update_res)=>{
+                console.log(update_res);
+                res.json({
+                    status: true,
+                    statuscode: 200,
+                    message: 'success',
+                    data:{
+                        user_id: update_res.user_id,
+                        access_token: update_res.access_token
+                    }
+                })
+            }).catch((update_error)=>{
+                console.log(`update error: ${update_error}`)
+                res.json({
+                    status: true,
+                    statuscode: 200,
+                    message: 'Error in updation',
+                    data:{}
+                });
+            });
+            // new userSchema(userUpdateData).updateOne({
+            //     email: req.body.email
+            // }).then((update_res)=>{
+            //     console.log(update_res);
+            // }).catch((update_error)=>{
+            //     console.log(`update error: ${update_error}`)
+            // });
         }else{
             //insert data
-            console.log('insert user data')
+            let userData={
+                user_id: 'bingo_000'+userNo,
+                name: req.body.name,
+                email: req.body.email,
+                description: req.body.description,
+                profile_url: req.body.profile_url,
+                access_token: await functions.generate_token(16),
+                fcm_token: req.body.fcm_token
+            }
+            console.log('insert user data');
+            new userSchema(userData).save().then((save_res)=>{
+                console.log(save_res);
+                res.json({
+                    status: true,
+                    statuscode: 200,
+                    message: 'success',
+                    data:{
+                        user_id: save_res.user_id,
+                        access_token: save_res.access_token
+                    }
+                })
+            }).catch(save_error=>{
+                console.log(`save error: ${save_error}`);
+                res.json({
+                    status: true,
+                    statuscode: 200,
+                    message: 'Error in insertion',
+                    data:{}
+                });
+            })
         }
     }).catch(email_check_error=>{
         console.log('email check error ', email_check_error)
     }) 
 
-    console.log('route is called',userData);
+    
 })
 
 module.exports=router;
