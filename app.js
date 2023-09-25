@@ -3,6 +3,7 @@ const app = express();
 const mongoose=require('mongoose');
 const port=process.env.PORT || 3000;
 const userRoute=require('./auth/register');
+const gameRoute=require('./routes/games');
 const cors=require('cors');
 app.use(cors({
     origin: '*'
@@ -23,6 +24,7 @@ try{
 
 app.use(express.json());
 app.use("/api/auth",userRoute);
+app.use("/api/game",gameRoute);
 
 app.get('/', function (req, res) {
     res.send('Hello World')
